@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Nishant's Webhook Monitor</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #f0f2f5; margin: 50px; }
+        .box { background: white; padding: 20px; border-radius: 10px; border: 1px solid #ccc; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; }
+        .event-item { padding: 10px; border-bottom: 1px dashed #bbb; color: #444; }
+        .timestamp { color: #888; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>Nishant's Repo Activity Monitor</h1>
+        <p>This page checks for new GitHub actions every 15 seconds...</p>
+        <div id="logs">
+            <p>Waiting for data from MongoDB...</p>
+        </div>
+    </div>
+
+    <script>
+        function loadEvents() {
+            console.log("Refreshing data from server...");
+            fetch('/api/events')
+                .then(response => response.json())
+                .then(events => {
+                    const display = document.getElementById('logs');
+                    if (events.length === 0) {
+                        display.innerHTML = "<p>No activity found yet. Try pushing some code!</p>";
+                        return;
+                    }
+
+                    display.innerHTML = events.map(item => {
+                        let message = "";
+                        if(item.action === "PUSH") {
+                            message = `<strong>${item.author}</strong> pushed to <strong>${item.to_branch}</strong>`;
+                        } else if(item.action === "PULL_REQUEST") {
+                            message = `<strong>${item.author}</strong> created a PR from <strong>${item.from_branch}</strong> to <strong>${item.to_branch}</strong>`;
+                        } else if(item.action === "MERGE") {
+                            message = `<strong>${item.author}</strong> merged <strong>${item.from_branch}</strong> into <strong>${item.to_branch}</strong>`;
+                        }
+                        
+                        return `<div class="event-item">${message} <br> <span class="timestamp">at ${item.timestamp}</span></div>`;
+                    }).join('');
+                });
+        }
+
+        // Run once on start
+        loadEvents();
+        // Refresh every 15 seconds
+        setInterval(loadEvents, 15000);
+    </script>
+</body>
+</html>
