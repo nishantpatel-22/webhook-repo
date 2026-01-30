@@ -24,7 +24,7 @@
                     
                     data.forEach(item => {
                         let message = "";
-                        // Formatting logic as per requirements [cite: 8, 11, 14]
+                        
                         if (item.action === "PUSH") {
                             message = `"${item.author}" pushed to "${item.to_branch}" on ${item.timestamp}`;
                         } else if (item.action === "PULL_REQUEST") {
@@ -41,9 +41,9 @@
                 });
         }
 
-        // Poll every 15 seconds 
+       
         setInterval(fetchActions, 15000);
-        fetchActions(); // Initial load
+        fetchActions(); 
     </script>
 </body>
 </html>
