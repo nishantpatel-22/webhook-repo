@@ -1,72 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>TechStaX Webhook Monitor</title>
+    <title>GitHub Activity Monitor</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 40px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
-        .event-item { padding: 15px; border-bottom: 1px solid #eee; transition: background 0.3s; }
-        .event-item:hover { background-color: #fcfcfc; }
-        .timestamp { color: #7f8c8d; font-size: 0.85em; display: block; margin-top: 5px; }
-        .action-tag { font-weight: bold; color: #2980b9; }
-        .highlight { color: #e67e22; font-weight: 600; }
+        body { font-family: sans-serif; padding: 50px; line-height: 1.6; }
+        .event { margin-bottom: 10px; padding: 10px; border-bottom: 1px solid #eee; }
+        #log-container { max-width: 800px; margin: 0 auto; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Webhook Activity Monitor</h1>
-        <p>Real-time updates from GitHub via MongoDB Atlas</p>
-        <div id="logs">
-            <p>Connecting to database...</p>
-        </div>
+    <div id="log-container">
+        <h2>Latest GitHub Repo Changes</h2>
+        <div id="logs">Loading latest actions...</div>
     </div>
 
     <script>
-        function loadEvents() {
-            // IMPORTANT: URL updated to match the Blueprint prefix '/webhook'
-            fetch('/webhook/events')
+        function fetchActions() {
+            fetch('/api/actions')
                 .then(response => response.json())
-                .then(events => {
-                    const display = document.getElementById('logs');
+                .then(data => {
+                    const container = document.getElementById('logs');
+                    container.innerHTML = '';
                     
-                    if (!events || events.length === 0) {
-                        display.innerHTML = "<p>No activity found yet. Try performing an action in your GitHub repo!</p>";
-                        return;
-                    }
-
-                    display.innerHTML = events.map(item => {
+                    data.forEach(item => {
                         let message = "";
-                        
-                        if(item.action === "PUSH") {
-                            message = `<span class="action-tag">PUSH:</span> <span class="highlight">${item.author}</span> pushed to <span class="highlight">${item.to_branch}</span>`;
-                        } else if(item.action === "PULL_REQUEST") {
-                            message = `<span class="action-tag">PR:</span> <span class="highlight">${item.author}</span> opened a request from <b>${item.from_branch}</b> to <b>${item.to_branch}</b>`;
-                        } else if(item.action === "MERGE") {
-                            message = `<span class="action-tag">MERGE:</span> <span class="highlight">${item.author}</span> merged <b>${item.from_branch}</b> into <b>${item.to_branch}</b>`;
-                        } else {
-                            message = `Action detected by ${item.author}`;
+                        // Formatting logic as per requirements [cite: 8, 11, 14]
+                        if (item.action === "PUSH") {
+                            message = `"${item.author}" pushed to "${item.to_branch}" on ${item.timestamp}`;
+                        } else if (item.action === "PULL_REQUEST") {
+                            message = `"${item.author}" submitted a pull request from "${item.from_branch}" to "${item.to_branch}" on ${item.timestamp}`;
+                        } else if (item.action === "MERGE") {
+                            message = `"${item.author}" merged branch "${item.from_branch}" to "${item.to_branch}" on ${item.timestamp}`;
                         }
                         
-                        return `
-                            <div class="event-item">
-                                ${message}
-                                <span class="timestamp">${item.timestamp}</span>
-                            </div>
-                        `;
-                    }).join('');
-                })
-                .catch(err => {
-                    console.error("Error fetching data:", err);
-                    document.getElementById('logs').innerHTML = "<p style='color:red;'>Error loading data. Is the server running?</p>";
+                        const div = document.createElement('div');
+                        div.className = 'event';
+                        div.innerText = message;
+                        container.appendChild(div);
+                    });
                 });
         }
 
-        // Initial load
-        loadEvents();
-        // Refresh every 15 seconds as per requirement
-        setInterval(loadEvents, 15000);
+        // Poll every 15 seconds 
+        setInterval(fetchActions, 15000);
+        fetchActions(); // Initial load
     </script>
 </body>
 </html>

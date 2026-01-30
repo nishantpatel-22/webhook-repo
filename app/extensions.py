@@ -1,5 +1,10 @@
+import os
 from pymongo import MongoClient
+from dotenv import load_dotenv
 
-# Use your actual connection string here
-client = MongoClient("mongodb+srv://np26112003_db_user:9jgHMqtf28Kht42K@cluster0.hrjoqju.mongodb.net/?appName=Cluster0")
+load_dotenv()
+
+# We pull the URI from the .env file for security
+mongo_uri = os.getenv("MONGO_URI")
+client = MongoClient(mongo_uri)
 db = client['webhook_db']

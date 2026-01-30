@@ -3,7 +3,7 @@ from app.extensions import db
 from datetime import datetime
 import pytz
 
-# The url_prefix='/webhook' means the receiver is at /webhook/receiver
+
 webhook = Blueprint('Webhook', __name__, url_prefix='/webhook')
 
 @webhook.route('/receiver', methods=['POST'])
@@ -31,7 +31,7 @@ def receiver():
         payload["request_id"] = data['head_commit']['id']
 
     elif event_type == 'pull_request':
-        # Check if it's a merge or just a PR
+       
         if data.get('action') == 'closed' and data['pull_request'].get('merged'):
             payload["action"] = "MERGE"
         else:
@@ -45,15 +45,15 @@ def receiver():
     collection.insert_one(payload)
     return jsonify({"status": "success"}), 200
 
-# Route to serve the HTML dashboard
+
 @webhook.route('/')
 def index():
     return render_template('index.html')
 
-# Route to provide data to the dashboard
+
 @webhook.route('/events', methods=['GET'])
 def get_events():
     collection = db['events']
-    # Fetch latest 10 events
+   
     events = list(collection.find({}, {'_id': 0}).sort('_id', -1).limit(10))
     return jsonify(events)
